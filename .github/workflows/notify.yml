@@ -1,0 +1,19 @@
+name: Channel Notification
+
+on:
+  push:
+
+jobs:
+  notify-channel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Message to ClickUp Chat
+        run: |
+          curl -X POST \
+            "https://api.clickup.com/api/v2/view/${{ secrets.CLICKUP_VIEW_ID }}/comment" \
+            -H "Authorization: ${{ secrets.CLICKUP_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "comment_text": "🚀 **New Code Uploaded**\nDeveloper: ${{ github.actor }}\nBranch: ${{ github.ref_name }}\nLink: ${{ github.event.compare }}",
+              "notify_all": true
+            }'
