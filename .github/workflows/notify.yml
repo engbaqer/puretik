@@ -1,19 +1,33 @@
-name: Channel Notification
+name: PR Channel Notification
 
 on:
-  push:
+  pull_request:
+    types: [opened, closed]
 
 jobs:
   notify-channel:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Message to ClickUp Chat
+      - name: Notify PR Opened (Junior Action)
+        if: github.event.action == 'opened'
         run: |
           curl -X POST \
             "https://api.clickup.com/api/v2/view/${{ secrets.CLICKUP_VIEW_ID }}/comment" \
             -H "Authorization: ${{ secrets.CLICKUP_API_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "comment_text": "🚀 **New Code Uploaded**\nDeveloper: ${{ github.actor }}\nBranch: ${{ github.ref_name }}\nLink: ${{ github.event.compare }}\n\n*System Note: Fingers crossed this code actually works and does not break the server. 🤞😅*",
+              "comment_text": "🚨 **New Merge Request!**\nDeveloper: ${{ github.actor }}\nTitle: ${{ github.event.pull_request.title }}\nLink: ${{ github.event.pull_request.html_url }}\n\n*System Note: Fingers crossed this code actually works. 🤞😅*",
+              "notify_all": true
+            }'
+
+      - name: Notify PR Merged (Senior Action)
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+        run: |
+          curl -X POST \
+            "https://api.clickup.com/api/v2/view/${{ secrets.CLICKUP_VIEW_ID }}/comment" \
+            -H "Authorization: ${{ secrets.CLICKUP_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "comment_text": "✅ **Merge Request Approved & Merged!**\nApproved by: ${{ github.actor }}\nTitle: ${{ github.event.pull_request.title }}\nLink: ${{ github.event.pull_request.html_url }}\n\n*System Note: We survived another merge without breaking the server! 🎉*",
               "notify_all": true
             }'
